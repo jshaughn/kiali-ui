@@ -95,7 +95,7 @@ export class GraphFind extends React.PureComponent<GraphFindProps, GraphFindStat
       this.handleFind();
     }
     if (hideChanged || compressOnHideChanged || (graphChanged && this.props.hideValue)) {
-      this.handleHide(graphChanged);
+      this.handleHide(graphChanged, hideChanged || compressOnHideChanged);
     }
   }
 
@@ -264,11 +264,12 @@ export class GraphFind extends React.PureComponent<GraphFindProps, GraphFindStat
     this.setState({ compressOnHide: !this.state.compressOnHide });
   };
 
-  private handleHide = (graphChanged: boolean) => {
+  private handleHide = (graphChanged: boolean, hideChanged: boolean) => {
     if (!this.props.cyData) {
       console.debug('Skip Hide: cy not set.');
       return;
     }
+    console.log('handleHide');
     const cy = this.props.cyData.cyRef;
     const selector = this.parseValue(this.props.hideValue);
     cy.startBatch();
@@ -289,7 +290,7 @@ export class GraphFind extends React.PureComponent<GraphFindProps, GraphFindStat
         this.removedElements.restore();
       }
       this.removedElements = undefined;
-      CytoscapeGraphUtils.runLayout(cy, this.props.layout);
+      // CytoscapeGraphUtils.runLayout(cy, this.props.layout);
     }
     if (selector) {
       // select the new hide-hits
@@ -308,7 +309,6 @@ export class GraphFind extends React.PureComponent<GraphFindProps, GraphFindStat
         // now subtract any appboxes that don't have any visible children
         const hiddenAppBoxes = cy.$('$node[isGroup]').subtract(cy.$('$node[isGroup] > :inside'));
         this.removedElements = this.removedElements.add(cy.remove(hiddenAppBoxes));
-        CytoscapeGraphUtils.runLayout(cy, this.props.layout);
       } else {
         // set the remaining hide-hits hidden
         this.hiddenElements = hiddenElements;
@@ -318,6 +318,9 @@ export class GraphFind extends React.PureComponent<GraphFindProps, GraphFindStat
         hiddenAppBoxes.style({ visibility: 'hidden' });
         this.hiddenElements = this.hiddenElements.add(hiddenAppBoxes);
       }
+    }
+    if (hideChanged) {
+      CytoscapeGraphUtils.runLayout(cy, this.props.layout);
     }
     cy.endBatch();
   };
